@@ -14,6 +14,7 @@ import type * as SidebarBg from 'src/services/sidebar.bg'
 import type * as SidebarFg from 'src/services/sidebar.fg'
 import type * as ContainersBg from 'src/services/containers.bg'
 import type * as GroupPage from 'src/page.group/group'
+import type * as AgentApiFg from 'src/services/agent-api.fg'
 
 export interface Message<T extends E.InstanceType, A extends ActionsKeys<T>> {
   id?: ID
@@ -131,6 +132,20 @@ export type SidebarActions = {
   getSearchQuery: () => string
   getEditingValue: () => string
   updWindowPreface: typeof WindowsFg.updWindowPreface
+
+  agentGetWindowState: typeof AgentApiFg.getWindowState
+  agentCreatePanel: typeof AgentApiFg.createPanel
+  agentUpdatePanel: typeof AgentApiFg.updatePanel
+  agentDeletePanel: typeof AgentApiFg.deletePanel
+  agentSwitchPanel: typeof AgentApiFg.switchPanel
+  agentCreateTab: typeof AgentApiFg.createTab
+  agentGroupTabs: typeof AgentApiFg.groupTabs
+  agentFlattenTabs: typeof AgentApiFg.flattenTabs
+  agentMoveTabs: typeof AgentApiFg.moveTabs
+  agentSetTabColor: typeof AgentApiFg.setTabColor
+  agentSetTabTitle: typeof AgentApiFg.setTabTitle
+  agentActivateTab: typeof AgentApiFg.activateTab
+  agentCloseTabs: typeof AgentApiFg.closeTabs
 }
 
 export type SearchPopupActions = {

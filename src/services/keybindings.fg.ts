@@ -1,5 +1,5 @@
 import * as Utils from 'src/utils'
-import { NOID } from 'src/defaults'
+import { COLOR_NAMES, NOID } from 'src/defaults'
 import * as T from 'src/types'
 import * as E from 'src/enums'
 import * as Settings from 'src/services/settings'
@@ -266,6 +266,7 @@ function onCmd(name: string): void {
   else if (name === 'group_tabs_act') onKeyGroupTabs(true)
   else if (name === 'flatten_tabs') onKeyFlattenTabs()
   else if (name === 'edit_title') onKeyEditTitle()
+  else if (name.startsWith('colorize_tab_')) onKeyColorizeTabs(name.slice(13))
   else if (name === 'sel_child_tabs') onKeySelChildTabs()
   else if (name === 'sort_tabs_by_title_asc') onKeySortTabs(SortBy.Title, 1)
   else if (name === 'sort_tabs_by_title_des') onKeySortTabs(SortBy.Title, -1)
@@ -1561,6 +1562,15 @@ function onKeyEditTitle() {
   else Tabs.editTabTitle(ids)
 }
 
+function onKeyColorizeTabs(color: string): void {
+  if (!COLOR_NAMES.includes(color)) return
+
+  const ids = Selection.isTabs() ? Selection.ids() : [Tabs.activeId]
+  if (!ids.length || ids[0] === NOID) return
+
+  Tabs.setCustomColor(ids, color)
+}
+
 /**
  * Setup keybinding listeners
  */
@@ -1580,4 +1590,5 @@ export function resetListeners(): void {
  */
 export const TESTING = {
   onKeySelectTabsBranch,
+  onKeyColorizeTabs,
 }

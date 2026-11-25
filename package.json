@@ -3,6 +3,9 @@
   "version": "5.6.1",
   "description": "Manage your tabs and bookmarks in sidebar",
   "main": "index.js",
+  "bin": {
+    "sidebery-cli": "./cli/sidebery.mjs"
+  },
   "type": "module",
   "scripts": {
     "dev": "node build/all.vite.js --dev",
@@ -28,7 +31,12 @@
     "release-notes": "node build/release-notes.js",
     "release.nightly": "node build/release-nightly.js",
     "test": "vitest run",
-    "test.watch": "vitest watch"
+    "test.watch": "vitest watch",
+    "test.cli": "node --test cli/agent-api.test.mjs",
+    "setup:cli": "node cli/install-host.mjs",
+    "uninstall:cli": "node cli/install-host.mjs --uninstall",
+    "api:install": "node cli/install-host.mjs",
+    "api:uninstall": "node cli/install-host.mjs --uninstall"
   },
   "author": "mbnuqw",
   "license": "MIT",

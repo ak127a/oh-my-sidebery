@@ -85,7 +85,15 @@ void (function () {
     },
     tabs: {
       create: () => Promise.resolve({}),
+      update: () => Promise.resolve({}),
+      remove: () => Promise.resolve(),
       captureTab: () => 'tab image',
+    },
+    sessions: {
+      setTabValue: () => Promise.resolve(),
+      getTabValue: () => Promise.resolve(undefined),
+      setWindowValue: () => Promise.resolve(),
+      getWindowValue: () => Promise.resolve(undefined),
     },
     windows: {},
   }

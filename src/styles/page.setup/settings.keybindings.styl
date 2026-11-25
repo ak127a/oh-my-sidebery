@@ -61,6 +61,18 @@
   padding: 4px 0
   transition: color var(--d-fast)
 
+.keybinding > .label .color-dot
+  display: inline-block
+  width: 10px
+  height: 10px
+  border-radius: 50%
+  margin-right: 8px
+  vertical-align: middle
+  &[data-none="true"]
+    background-color: transparent
+    box-shadow: inset 0 0 0 1px var(--toolbar-fg)
+    opacity: .6
+
 .keybinding > .value
   position: relative
   font-size: rem(13)

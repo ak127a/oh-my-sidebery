@@ -18,6 +18,7 @@ import * as WebReq from 'src/services/web-req.bg'
 import * as Sync from 'src/services/sync.bg'
 import * as Omnibox from 'src/services/omnibox.bg'
 import * as Styles from 'src/services/styles.bg'
+import * as AgentApi from 'src/services/agent-api.bg'
 
 void (async function main() {
   markLocalStorage()
@@ -124,6 +125,8 @@ void (async function main() {
 
   Omnibox.setupListeners()
   Omnibox.load()
+
+  AgentApi.setupNativeHost()
 
   Logs.info(`Init end: ${performance.now() - ts}ms`)
 

@@ -441,6 +441,33 @@
     "zh_TW": "編輯標題",
     "ru": "Редактировать заголовок"
   },
+  "KbColorizeTabToolbar": {
+    "en": "Reset color of selected/active tab"
+  },
+  "KbColorizeTabBlue": {
+    "en": "Set blue color for selected/active tab"
+  },
+  "KbColorizeTabTurquoise": {
+    "en": "Set turquoise color for selected/active tab"
+  },
+  "KbColorizeTabGreen": {
+    "en": "Set green color for selected/active tab"
+  },
+  "KbColorizeTabYellow": {
+    "en": "Set yellow color for selected/active tab"
+  },
+  "KbColorizeTabOrange": {
+    "en": "Set orange color for selected/active tab"
+  },
+  "KbColorizeTabRed": {
+    "en": "Set red color for selected/active tab"
+  },
+  "KbColorizeTabPink": {
+    "en": "Set pink color for selected/active tab"
+  },
+  "KbColorizeTabPurple": {
+    "en": "Set purple color for selected/active tab"
+  },
   "KbOpenNewTabInCurrPanel": {
     "en": "Open a new tab in the active panel",
     "de": "Neuen Tab im aktiven Panel öffnen",

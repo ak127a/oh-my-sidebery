@@ -59,7 +59,10 @@ export async function replaceRelGroupWithPinnedTab(
 /**
  * Group tabs
  */
-export async function groupTabs(tabIds: ID[], conf?: T.NewGroupConfig): Promise<void> {
+export async function groupTabs(
+  tabIds: ID[],
+  conf?: T.NewGroupConfig
+): Promise<browser.tabs.Tab | undefined> {
   Logs.info('Tabs.groupTabs')
 
   const noConfig = !conf
@@ -139,6 +142,8 @@ export async function groupTabs(tabIds: ID[], conf?: T.NewGroupConfig): Promise<
   }
   const dst = { index: groupTab.index + 1, panelId: panel.id, parentId: groupTab.id }
   await Tabs.move(tabs, {}, dst)
+
+  return groupTab
 }
 
 export async function openGroupConfigPopup(config: T.NewGroupConfig): Promise<GroupConfigResult> {

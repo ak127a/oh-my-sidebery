@@ -67,6 +67,19 @@
     KeybindingField(:keybinding="Keybindings.reactive.byName.edit_title")
 
   section
+    h2 {{translate('settings.kb_colorize_tabs')}}
+    span.header-shadow
+    KeybindingField.-no-separator(:keybinding="Keybindings.reactive.byName.colorize_tab_toolbar" color="toolbar")
+    KeybindingField(:keybinding="Keybindings.reactive.byName.colorize_tab_blue" color="blue")
+    KeybindingField(:keybinding="Keybindings.reactive.byName.colorize_tab_turquoise" color="turquoise")
+    KeybindingField(:keybinding="Keybindings.reactive.byName.colorize_tab_green" color="green")
+    KeybindingField(:keybinding="Keybindings.reactive.byName.colorize_tab_yellow" color="yellow")
+    KeybindingField(:keybinding="Keybindings.reactive.byName.colorize_tab_orange" color="orange")
+    KeybindingField(:keybinding="Keybindings.reactive.byName.colorize_tab_red" color="red")
+    KeybindingField(:keybinding="Keybindings.reactive.byName.colorize_tab_pink" color="pink")
+    KeybindingField(:keybinding="Keybindings.reactive.byName.colorize_tab_purple" color="purple")
+
+  section
     h2 {{translate('settings.kb_tabs_open')}}
     span.header-shadow
     KeybindingField.-no-separator(:keybinding="Keybindings.reactive.byName.new_tab_on_panel")

@@ -2,7 +2,12 @@
 .keybinding(
   :is-focused="keybinding.focus"
   :data-error="!!keybinding.error")
-  .label(@click="changeKeybinding(keybinding)") {{keybinding.description}}
+  .label(@click="changeKeybinding(keybinding)")
+    span.color-dot(
+      v-if="color"
+      :data-none="color === 'toolbar'"
+      :style="color !== 'toolbar' ? { backgroundColor: RGB_COLORS[color] } : undefined")
+    | {{keybinding.description}}
   .value(v-if="keybinding.focus") {{inputLabel}}
   .value(v-else-if="keybinding.error") {{translate('settings.kb_err_' + keybinding.error)}}
   .value(v-else @click="changeKeybinding(keybinding)") {{normalizeShortcut(keybinding.shortcut)}}
@@ -22,6 +27,7 @@
 import { ref, reactive, computed, nextTick } from 'vue'
 import { translate } from 'src/dict'
 import type { Command } from 'src/types'
+import { RGB_COLORS } from 'src/defaults'
 import * as Info from 'src/services/info'
 import * as Popups from 'src/services/popups.fg'
 import * as Keybindings from 'src/services/keybindings.fg'
@@ -31,7 +37,7 @@ const ERR_SHOW_TIMEOUT = 2000
 const inputEl = ref<HTMLInputElement | null>(null)
 const state = reactive({ newShortcut: '', overrideShortcut: null as Command | null })
 
-defineProps<{ keybinding: Command }>()
+defineProps<{ keybinding: Command; color?: string }>()
 
 let errTimeout: number
 let errMsg = ''

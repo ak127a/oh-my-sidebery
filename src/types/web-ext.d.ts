@@ -88,6 +88,7 @@ declare namespace browser {
     function getPlatformInfo(): Promise<PlatformInfo>
     function getBrowserInfo(): Promise<BrowserInfo>
     function connect(connectInfo: ConnectInfo): Port
+    function connectNative(application: string): Port
     function reload(): void
 
     type MessageListener = <I, O>(msg: I) => Promise<O>

@@ -41,7 +41,8 @@
     "menus.overrideContext",
     "search",
     "theme",
-    "identity"
+    "identity",
+    "nativeMessaging"
   ],
   "optional_permissions": [
     "<all_urls>",
@@ -415,6 +416,33 @@
     },
     "edit_title": {
       "description": "__MSG_KbEditTitle__"
+    },
+    "colorize_tab_toolbar": {
+      "description": "__MSG_KbColorizeTabToolbar__"
+    },
+    "colorize_tab_blue": {
+      "description": "__MSG_KbColorizeTabBlue__"
+    },
+    "colorize_tab_turquoise": {
+      "description": "__MSG_KbColorizeTabTurquoise__"
+    },
+    "colorize_tab_green": {
+      "description": "__MSG_KbColorizeTabGreen__"
+    },
+    "colorize_tab_yellow": {
+      "description": "__MSG_KbColorizeTabYellow__"
+    },
+    "colorize_tab_orange": {
+      "description": "__MSG_KbColorizeTabOrange__"
+    },
+    "colorize_tab_red": {
+      "description": "__MSG_KbColorizeTabRed__"
+    },
+    "colorize_tab_pink": {
+      "description": "__MSG_KbColorizeTabPink__"
+    },
+    "colorize_tab_purple": {
+      "description": "__MSG_KbColorizeTabPurple__"
     },
     "sort_tabs_by_title_asc": {
       "description": "__MSG_KbSortTabsByTitleAsc__"

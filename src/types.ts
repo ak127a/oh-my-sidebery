@@ -20,6 +20,7 @@ export type * from './types/windows'
 export type * from './types/styles'
 export type * from './types/bookmarks'
 export type * from './types/history'
+export type * from './types/agent-api'
 
 export interface ConfirmDialog {
   type: E.ConfirmationType

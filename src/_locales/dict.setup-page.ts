@@ -7529,6 +7529,9 @@ url:github\\.com\\/.+\\/\\d+; title:(?<v>#\\d+); bg:#fff; fg:#000
     zh_TW: '分頁',
     ja: 'タブ',
   },
+  'settings.kb_colorize_tabs': {
+    en: 'Colorize tabs',
+  },
   'settings.kb_tabs_open': {
     en: 'Open a new tab',
     de: 'Neuen Tab öffnen',

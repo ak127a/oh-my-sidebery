@@ -27,6 +27,66 @@ Firefox extension for managing tabs and bookmarks in sidebar.
 
 </div>
 
+## What This Fork Adds
+
+This fork extends upstream Sidebery with two extra features:
+
+1. **Custom Keybinds for Tab Colors**
+   - Adds customizable keybindings for all 8 Sidebery tab colors (`blue`, `turquoise`, `green`, `yellow`, `orange`, `red`, `pink`, `purple`) plus a color reset command (`toolbar`) in **Sidebery Settings → Keybindings → Colorize tabs**, complete with color swatch previews.
+   - Applies to the currently selected tabs or the active tab when no selection is active.
+
+2. **AI Agent CLI (`sidebery-cli`), Local HTTP / Unix-Socket API & Agent Skill**
+   - Bridges a local CLI and loopback HTTP / Unix-socket API to Sidebery via Firefox Native Messaging (`sidebery_api`) so AI agents and scripts can:
+     - **Inspect** open windows, panels, tabs, tree hierarchies, tab groups, custom colors, and URLs (`sidebery-cli tabs --tree`, `state`, `panels`, `groups`).
+     - **Mutate** browser workspace state: create/update/switch/delete panels, open single or batch tabs in specific panels or under parent tabs, group/flatten/move tabs, retitle/activate/close tabs, and set/reset tab colors.
+   - Ships with a ready-to-use AI agent skill ([skills/sidebery/SKILL.md](skills/sidebery/SKILL.md)).
+
+### CLI, Native Host & AI Skill Setup (macOS / Linux / Windows)
+
+Install the global `sidebery-cli` command, the Firefox native messaging host manifest (`sidebery_api`), and the `sidebery` AI skill in a **single command**:
+
+**Without cloning (via `npx`):**
+```sh
+npx --yes github:ak127a/sidebery install
+```
+
+**From a cloned repository:**
+```sh
+npm run setup:cli
+```
+
+<details><summary><b>What the single-command installer sets up on macOS, Linux, and Windows</b></summary>
+
+- **Linux**: Installs self-contained scripts to `~/.local/share/sidebery-api`, `sidebery-cli` to `~/.local/bin/sidebery-cli`, and `sidebery_api.json` to `~/.mozilla/native-messaging-hosts/` and `~/.config/mozilla/native-messaging-hosts/`.
+- **macOS**: Installs self-contained scripts to `~/.local/share/sidebery-api`, `sidebery-cli` to `~/.local/bin/sidebery-cli`, and `sidebery_api.json` to `~/Library/Application Support/Mozilla/NativeMessagingHosts/`.
+- **Windows**: Installs self-contained scripts to `%LOCALAPPDATA%\sidebery-api`, `sidebery-cli.cmd` to `%APPDATA%\npm` (or `%USERPROFILE%\.local\bin`), and registers `HKCU\Software\Mozilla\NativeMessagingHosts\sidebery_api`.
+- **AI Skill**: Copies [skills/sidebery/SKILL.md](skills/sidebery/SKILL.md) to `~/.agents/skills/sidebery/SKILL.md` and any detected agent skill directories (`~/.claude`, `~/.codex`, `~/.gemini/config`, `~/.cursor`).
+- **Uninstall**: Run `sidebery-cli uninstall` (or `npm run uninstall:cli`).
+
+</details>
+
+### Build & Load the Extension
+
+```sh
+npm ci
+npm run build
+```
+
+Then in Firefox, open `about:debugging#/runtime/this-firefox` → **Load Temporary Add-on…** → select `addon/manifest.json`.
+
+### Quick CLI Usage
+
+```sh
+sidebery-cli ping
+sidebery-cli tabs --tree
+sidebery-cli panel create "Research" --color purple --icon icon_search --activate
+sidebery-cli tab create https://example.com --panel "Research" --color green
+sidebery-cli tab group 12 13 --title "Docs" --color turquoise
+sidebery-cli tab color red 12
+```
+
+See [docs/agent-api.md](docs/agent-api.md) for the full CLI & HTTP API reference and [skills/sidebery/SKILL.md](skills/sidebery/SKILL.md) for the AI agent skill instructions.
+
 ## Install
 
 **Stable**:

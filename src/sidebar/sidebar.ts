@@ -26,6 +26,7 @@ import * as Snapshots from 'src/services/snapshots.fg'
 import * as Sync from 'src/services/sync.fg'
 import * as Keybindings from 'src/services/keybindings.fg'
 import * as WebReq from 'src/services/web-req.fg'
+import * as AgentApi from 'src/services/agent-api.fg'
 import SidebarRoot from './sidebar.vue'
 
 async function main(): Promise<void> {
@@ -76,6 +77,19 @@ async function main(): Promise<void> {
     getSearchQuery: Search.getSearchQuery,
     getEditingValue: Tabs.getEditingValue,
     updWindowPreface: Windows.updWindowPreface,
+    agentGetWindowState: AgentApi.getWindowState,
+    agentCreatePanel: AgentApi.createPanel,
+    agentUpdatePanel: AgentApi.updatePanel,
+    agentDeletePanel: AgentApi.deletePanel,
+    agentSwitchPanel: AgentApi.switchPanel,
+    agentCreateTab: AgentApi.createTab,
+    agentGroupTabs: AgentApi.groupTabs,
+    agentFlattenTabs: AgentApi.flattenTabs,
+    agentMoveTabs: AgentApi.moveTabs,
+    agentSetTabColor: AgentApi.setTabColor,
+    agentSetTabTitle: AgentApi.setTabTitle,
+    agentActivateTab: AgentApi.activateTab,
+    agentCloseTabs: AgentApi.closeTabs,
   })
 
   await Promise.all([

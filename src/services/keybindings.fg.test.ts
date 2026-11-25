@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from 'vitest'
 import * as Tabs from 'src/services/tabs.fg'
 import * as Selection from 'src/services/selection.fg'
 import * as Keybindings from 'src/services/keybindings.fg'
-import { addMTTab, resetMTabs } from 'src/defaults/mocks.tabs.fg'
+import { addMTab, addMTTab, resetMTabs } from 'src/defaults/mocks.tabs.fg'
 
 describe('Keybindings.onKeySelectTabsBranch()', () => {
   afterEach(() => {
@@ -57,5 +57,53 @@ describe('Keybindings.onKeySelectTabsBranch()', () => {
 
     Keybindings.TESTING.onKeySelectTabsBranch()
     expect(Selection.ids()).toStrictEqual([2, 3, 4, 5, 6, 7])
+  })
+})
+
+describe('Keybindings.onKeyColorizeTabs()', () => {
+  afterEach(() => {
+    resetMTabs()
+    Selection.resetSelection()
+  })
+
+  test('Sets custom color on active tab when nothing is selected', () => {
+    addMTab({ id: 2, active: true })
+    addMTab({ id: 3 })
+
+    Keybindings.TESTING.onKeyColorizeTabs('blue')
+    expect(Tabs.byId[2]?.customColor).toBe('blue')
+    expect(Tabs.byId[2]?.reactive.customColor).toBe('blue')
+    expect(Tabs.byId[3]?.customColor).toBeUndefined()
+  })
+
+  test('Sets custom color on all selected tabs', () => {
+    addMTab({ id: 2, active: true })
+    addMTab({ id: 3 })
+    addMTab({ id: 4 })
+    Selection.selectTab(3)
+    Selection.selectTab(4)
+
+    Keybindings.TESTING.onKeyColorizeTabs('red')
+    expect(Tabs.byId[2]?.customColor).toBeUndefined()
+    expect(Tabs.byId[3]?.customColor).toBe('red')
+    expect(Tabs.byId[4]?.customColor).toBe('red')
+    expect(Tabs.byId[4]?.reactive.customColor).toBe('red')
+  })
+
+  test('Resets custom color when given toolbar', () => {
+    const tab = addMTab({ id: 2, active: true })
+    Tabs.setCustomColor([tab.id], 'green')
+    expect(tab.customColor).toBe('green')
+
+    Keybindings.TESTING.onKeyColorizeTabs('toolbar')
+    expect(tab.customColor).toBeUndefined()
+    expect(tab.reactive.customColor).toBeNull()
+  })
+
+  test('Ignores invalid color names', () => {
+    const tab = addMTab({ id: 2, active: true })
+    Keybindings.TESTING.onKeyColorizeTabs('chartreuse')
+    expect(tab.customColor).toBeUndefined()
+    expect(tab.reactive.customColor).toBeNull()
   })
 })
