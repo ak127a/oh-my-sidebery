@@ -2,7 +2,8 @@ import os from 'node:os'
 import path from 'node:path'
 
 export const HOST_NAME = 'sidebery_api'
-export const EXTENSION_ID = '{3c078156-979c-498b-8990-85f7987dd929}'
+export const EXTENSION_ID = 'sidebery-ai@ak127a'
+export const ALLOWED_EXTENSIONS = [EXTENSION_ID, '{3c078156-979c-498b-8990-85f7987dd929}']
 export const DEFAULT_PORT = 47321
 
 export function getRuntimeDir() {

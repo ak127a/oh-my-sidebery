@@ -4,7 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { EXTENSION_ID, HOST_NAME } from './protocol.mjs'
+import { ALLOWED_EXTENSIONS, HOST_NAME } from './protocol.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PACKAGE_ROOT = path.resolve(__dirname, '..')
@@ -126,7 +126,7 @@ export function installHost(options = {}) {
     description: 'Sidebery AI Agent API Native Messaging Host',
     path: wrapperPath,
     type: 'stdio',
-    allowed_extensions: [EXTENSION_ID],
+    allowed_extensions: ALLOWED_EXTENSIONS,
   }
 
   const installedManifests = []

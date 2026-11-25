@@ -327,7 +327,10 @@ test('installHost and uninstallHost support linux, darwin, and win32', () => {
         const parsed = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
         assert.equal(parsed.name, 'sidebery_api')
         assert.equal(parsed.path, res.wrapperPath)
-        assert.deepEqual(parsed.allowed_extensions, ['{3c078156-979c-498b-8990-85f7987dd929}'])
+        assert.deepEqual(parsed.allowed_extensions, [
+          'sidebery-ai@ak127a',
+          '{3c078156-979c-498b-8990-85f7987dd929}',
+        ])
       }
 
       assert.ok(fs.existsSync(path.join(homeDir, '.agents', 'skills', 'sidebery', 'SKILL.md')))
