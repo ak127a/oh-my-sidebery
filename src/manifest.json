@@ -19,7 +19,7 @@
   "version": "5.6.1",
   "default_locale": "en",
   "description": "__MSG_ExtDesc__",
-  "homepage_url": "https://github.com/mbnuqw/sidebery",
+  "homepage_url": "https://github.com/ak127a/oh-my-sidebery",
   "icons": {
     "48": "./assets/logo.svg",
     "96": "./assets/logo.svg"

@@ -1,6 +1,6 @@
-# Sidebery AI Agent CLI & Local API
+# oh-my-sidebery AI Agent CLI & Local API
 
-Sidebery exposes a local CLI (`sidebery-cli`) and HTTP / Unix-socket API bridged directly to the running extension via Firefox Native Messaging (`sidebery_api`). AI agents and scripts can inspect open windows, panels, tab trees, tab groups, and URLs, and create panels, open tabs, group/flatten/move tabs, and set tab colors.
+`oh-my-sidebery` exposes a local CLI (`sidebery-cli`) and HTTP / Unix-socket API bridged directly to the running Sidebery extension via Firefox Native Messaging (`sidebery_api`). AI agents and scripts can inspect open windows, panels, tab trees, tab groups, and URLs, and create panels, open tabs, group/flatten/move tabs, and set tab colors.
 
 ## Setup (macOS / Linux / Windows)
 
@@ -15,7 +15,7 @@ Sidebery exposes a local CLI (`sidebery-cli`) and HTTP / Unix-socket API bridged
    ```
    Or without cloning:
    ```sh
-   npx --yes github:ak127a/sidebery install
+   npx --yes github:ak127a/oh-my-sidebery install
    ```
    What this configures:
    - **Linux**: `~/.local/share/sidebery-api`, `~/.local/bin/sidebery-cli`, and `sidebery_api.json` in `~/.mozilla/native-messaging-hosts/` and `~/.config/mozilla/native-messaging-hosts/`.
