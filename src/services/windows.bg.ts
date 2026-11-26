@@ -139,6 +139,7 @@ export async function createWithTabs(
 
   // Go through moved/new tabs and restore their state from srcInfo
   const cache: TabCache[] = []
+  const savingSessionData: Promise<void>[] = []
   for (let i = 0; i < processedTabs.length; i++) {
     const tab = processedTabs[i] as BgTab | null
     const srcInfo = tabsInfo[i]
@@ -172,13 +173,16 @@ export async function createWithTabs(
     }
     if (srcInfo.customTitle) sessionData.customTitle = srcInfo.customTitle
     if (srcInfo.customColor) sessionData.customColor = srcInfo.customColor
-    browser.sessions.setTabValue(tab.id, 'data', sessionData).catch(err => {
-      Logs.err('Windows.createWithTabs: Cannot set session data:', err)
-    })
+    savingSessionData.push(
+      browser.sessions.setTabValue(tab.id, 'data', sessionData).catch(err => {
+        Logs.err('Windows.createWithTabs: Cannot set session data:', err)
+      })
+    )
 
     idsMap[srcInfo.id] = tab.id
   }
 
+  await Promise.all(savingSessionData)
   Tabs.cacheTabsData(window.id, cache, 0)
 
   // Update succession for the initial tab

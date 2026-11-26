@@ -147,6 +147,9 @@ export interface NewTabPosition {
   parent: ID
   panel: ID
   unread?: boolean
+  customTitle?: string
+  customColor?: string
+  folded?: boolean
 }
 
 export interface GroupPageInitData {

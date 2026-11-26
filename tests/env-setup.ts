@@ -35,7 +35,11 @@ void (function () {
       getAll: () => Promise.resolve([]),
     },
     cookies: {},
-    contextualIdentities: {},
+    contextualIdentities: {
+      create: () => Promise.resolve({}),
+      query: () => Promise.resolve([]),
+      getSupportedColors: () => Promise.resolve([]),
+    },
     proxy: {
       onRequest: {},
     },
@@ -79,7 +83,26 @@ void (function () {
           StorageLocalData = { ...StorageLocalData, ...obj }
           return Promise.resolve()
         },
-        get: (key: any) => Promise.resolve({ [key]: StorageLocalData[key] }),
+        get: (keys?: string | string[] | Record<string, any>) => {
+          if (keys === undefined || keys === null) {
+            return Promise.resolve({ ...StorageLocalData })
+          }
+          if (Array.isArray(keys)) {
+            const out: Record<string, any> = {}
+            for (const k of keys) {
+              if (k in StorageLocalData) out[k] = StorageLocalData[k]
+            }
+            return Promise.resolve(out)
+          }
+          if (typeof keys === 'object') {
+            const out: Record<string, any> = {}
+            for (const k of Object.keys(keys)) {
+              out[k] = k in StorageLocalData ? StorageLocalData[k] : keys[k]
+            }
+            return Promise.resolve(out)
+          }
+          return Promise.resolve({ [keys]: StorageLocalData[keys] })
+        },
       },
       sync: {},
     },
@@ -87,7 +110,17 @@ void (function () {
       create: () => Promise.resolve({}),
       update: () => Promise.resolve({}),
       remove: () => Promise.resolve(),
+      query: () => Promise.resolve([]),
+      move: () => Promise.resolve([]),
+      moveInSuccession: () => Promise.resolve(),
       captureTab: () => 'tab image',
+      onCreated: new EventTarget(),
+      onUpdated: new EventTarget(),
+      onRemoved: new EventTarget(),
+      onMoved: new EventTarget(),
+      onDetached: new EventTarget(),
+      onAttached: new EventTarget(),
+      onActivated: new EventTarget(),
     },
     sessions: {
       setTabValue: () => Promise.resolve(),
@@ -95,6 +128,10 @@ void (function () {
       setWindowValue: () => Promise.resolve(),
       getWindowValue: () => Promise.resolve(undefined),
     },
-    windows: {},
+    windows: {
+      create: () => Promise.resolve({}),
+      getAll: () => Promise.resolve([]),
+      getCurrent: () => Promise.resolve({ id: 1, type: 'normal', focused: true, incognito: false }),
+    },
   }
 })()

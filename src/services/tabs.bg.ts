@@ -543,6 +543,65 @@ export function cacheTabsData(windowId: ID, tabs: T.TabCache[], delay = 300): vo
   }, delay)
 }
 
+async function getFallbackTabsTreeData(window: T.BgWindow): Promise<T.TabsTreeData> {
+  if (!window.tabs?.length) return []
+
+  const cache = Tabs.cacheByWin[window.id]
+  if (cache?.length) {
+    const cacheById = new Map<ID, T.TabCache>()
+    for (const c of cache) cacheById.set(c.id, c)
+
+    if (window.tabs.some(t => cacheById.has(t.id))) {
+      return window.tabs.map(tab => {
+        const c = cacheById.get(tab.id)
+        const data: T.TabTreeData = { id: tab.id }
+        if (!c) return data
+        if (c.panelId !== undefined && c.panelId !== D.NOID) data.pid = c.panelId
+        if (c.parentId !== undefined && c.parentId !== D.NOID) data.tid = c.parentId
+        if (c.customTitle) data.ct = c.customTitle
+        if (c.customColor) data.cc = c.customColor
+        if (c.folded) data.f = 1
+        return data
+      })
+    }
+  }
+
+  const sessionDataList = await Promise.all(
+    window.tabs.map(t =>
+      browser.sessions.getTabValue<T.TabSessionData>(t.id, 'data').catch(() => undefined)
+    )
+  )
+
+  const idsMap: Record<ID, ID> = {}
+  for (let i = 0; i < window.tabs.length; i++) {
+    const tab = window.tabs[i]
+    const data = sessionDataList[i]
+    if (tab && data) idsMap[data.id] = tab.id
+  }
+
+  const tree: T.TabsTreeData = []
+  for (let i = 0; i < window.tabs.length; i++) {
+    const tab = window.tabs[i]
+    const sData = sessionDataList[i]
+    if (!tab) continue
+
+    const data: T.TabTreeData = { id: tab.id }
+    if (sData) {
+      if (sData.panelId !== undefined && sData.panelId !== D.NOID) data.pid = sData.panelId
+      if (sData.parentId !== undefined && sData.parentId !== D.NOID) {
+        const mappedParentId = idsMap[sData.parentId]
+        if (mappedParentId !== undefined) data.tid = mappedParentId
+      }
+      if (sData.customTitle) data.ct = sData.customTitle
+      if (sData.customColor) data.cc = sData.customColor
+      if (sData.folded) data.f = 1
+    }
+    tree.push(data)
+  }
+
+  return tree
+}
+
 /**
  * Update trees state from sidebars
  */
@@ -556,10 +615,19 @@ export async function updateBgTabsTreeData(): Promise<void> {
 
     const sidebarConnection = IPC.getConnection(InstanceType.sidebar, window.id)
     if (sidebarConnection) {
-      receivingSidebarTrees.push(IPC.sidebar(window.id, 'getTabsTreeData'))
+      receivingSidebarTrees.push(
+        IPC.sidebar(window.id, 'getTabsTreeData').catch(err => {
+          Logs.warn(
+            'Tabs.updateBgTabsTreeData: Sidebar IPC failed, using fallback:',
+            window.id,
+            err
+          )
+          return getFallbackTabsTreeData(window)
+        })
+      )
     } else {
       Logs.warn('Tabs.updateBgTabsTreeData: No connected sidebar:', window.id)
-      receivingSidebarTrees.push(Promise.resolve([]))
+      receivingSidebarTrees.push(getFallbackTabsTreeData(window))
     }
   }
 
@@ -592,10 +660,13 @@ export async function updateBgTabsTreeData(): Promise<void> {
       Logs.warn('Tabs.updateBgTabsTreeData: No sidebar tree, i:', i)
     }
 
+    const windowTabsById: Record<ID, T.BgTab> = {}
     for (const tab of window.tabs) {
+      windowTabsById[tab.id] = tab
       tab.lvl = 0
       tab.parentId = D.NOID
       tab.panelId = D.NOID
+      tab.folded = false
       tab.customTitle = undefined
       tab.customColor = undefined
 
@@ -607,8 +678,12 @@ export async function updateBgTabsTreeData(): Promise<void> {
       if (tabInfo.ct) tab.customTitle = tabInfo.ct
       if (tabInfo.cc) tab.customColor = tabInfo.cc
       if (tabInfo.f) tab.folded = true
-      const parent = Tabs.byId[tab.parentId]
-      if (parent) tab.lvl = (parent.lvl ?? 0) + 1
+    }
+
+    for (const tab of window.tabs) {
+      if (tab.parentId === undefined || tab.parentId === D.NOID) continue
+      const parent = Tabs.byId[tab.parentId] ?? windowTabsById[tab.parentId]
+      if (parent && parent.panelId === tab.panelId) tab.lvl = (parent.lvl ?? 0) + 1
     }
   }
 }

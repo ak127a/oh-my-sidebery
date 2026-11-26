@@ -326,6 +326,18 @@ async function onTabCreated(nativeTab: NativeTab, attached?: boolean) {
     }
     tab.openerTabId = position.parent
     if (position.unread !== undefined) tab.unread = position.unread
+    if (position.customColor) {
+      tab.customColor = position.customColor
+      tab.reactive.customColor = position.customColor
+    }
+    if (position.customTitle) {
+      tab.customTitle = position.customTitle
+      Tabs.renderTitle(tab)
+    }
+    if (position.folded) {
+      tab.folded = true
+      tab.reactive.folded = true
+    }
     delete Tabs.newTabsPosition[tab.index]
 
     // Handle tab reopening

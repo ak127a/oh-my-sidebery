@@ -205,7 +205,7 @@ export function foldBranchInViewer(index: number, tabs: T.SnapTabState[]) {
   const rootTab = tabs[index]
   if (!rootTab || !rootTab.isParent) return
 
-  rootTab.ref.folded = rootTab.folded = !rootTab.folded
+  rootTab.folded = !rootTab.folded
 
   const rootTabLvl = rootTab.lvl ?? 0
   let foldedLvl = -1

@@ -377,9 +377,9 @@ async function adaptTabsPanels(snapshot: NormalizedSnapshot): Promise<void> {
       const storedPanel = stored.sidebar.panels[storedId]
       if (!storedPanel || storedPanel.type !== PanelType.tabs) continue
 
-      const snapPanelTabs = win.find(tabs => tabs[0]?.panelId === storedPanel.id)
-      if (snapPanelTabs) newOrder.push(snapPanelTabs)
-      else continue
+      for (const tabs of win) {
+        if (tabs[0]?.panelId === storedPanel.id) newOrder.push(tabs)
+      }
     }
 
     snapshot.tabs[i] = newOrder
@@ -429,10 +429,10 @@ async function openWindow(
 
   // Create tabs info
   const items: ItemInfo[] = []
-  const tabsInfoByLvl: Record<number, ItemInfo> = {}
   let index = 0
   for (const panel of winTabs) {
     Logs.info('Snapshots.openWindow: panel/pin panelId, len:', panel[0]?.panelId, panel.length)
+    const tabsInfoByLvl: Record<number, ItemInfo> = {}
 
     for (const tab of panel) {
       if (tab.panelId === GLOB_PINNED_ID) tab.panelId = NOID

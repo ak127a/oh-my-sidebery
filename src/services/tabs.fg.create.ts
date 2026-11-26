@@ -1,4 +1,4 @@
-import { DragInfo, DstPlaceInfo, ItemInfo, Panel, Tab, TabsPanel } from 'src/types'
+import { DragInfo, DstPlaceInfo, ItemInfo, NewTabPosition, Panel, Tab, TabsPanel } from 'src/types'
 import { DstTreePos, PanelType } from 'src/enums'
 import * as D from 'src/defaults'
 import * as Sidebar from 'src/services/sidebar.fg'
@@ -495,28 +495,36 @@ export async function open(
     }
 
     if (index !== undefined) {
-      Tabs.setNewTabPosition(index, parentId, dstPanel?.id ?? D.NOID)
+      Tabs.setNewTabPosition(index, parentId, dstPanel?.id ?? D.NOID, undefined, {
+        customTitle: item.customTitle,
+        customColor: item.customColor,
+        folded: item.folded,
+      })
     }
 
     const tab = await browser.tabs.create(conf)
     idsMap[item.id] = tab.id
 
-    if (item.customTitle) {
-      const newTab = Tabs.byId[tab.id]
-      if (newTab) {
+    const newTab = Tabs.byId[tab.id]
+    if (newTab) {
+      let updated = false
+      if (item.customTitle && newTab.customTitle !== item.customTitle) {
         newTab.customTitle = item.customTitle
         Tabs.renderTitle(newTab)
+        updated = true
       }
-    }
-
-    if (item.customColor) {
-      const newTab = Tabs.byId[tab.id]
-      if (newTab) newTab.reactive.customColor = newTab.customColor = item.customColor
-    }
-
-    if (item.folded) {
-      const newTab = Tabs.byId[tab.id]
-      if (newTab) newTab.reactive.folded = newTab.folded = true
+      if (item.customColor && newTab.customColor !== item.customColor) {
+        newTab.reactive.customColor = newTab.customColor = item.customColor
+        updated = true
+      }
+      if (item.folded && !newTab.folded) {
+        newTab.reactive.folded = newTab.folded = true
+        updated = true
+      }
+      if (updated) {
+        Tabs.saveTabData(newTab.id)
+        Tabs.cacheTabsData()
+      }
     }
   }
 
@@ -610,13 +618,18 @@ export function setNewTabPosition(
   index: number,
   parentId: ID,
   panelId: ID,
-  unread?: boolean
+  unread?: boolean,
+  props?: Pick<NewTabPosition, 'customTitle' | 'customColor' | 'folded'>
 ): void {
-  Tabs.newTabsPosition[index] = {
+  const pos: NewTabPosition = {
     parent: parentId,
     panel: panelId,
     unread: unread,
   }
+  if (props?.customTitle !== undefined) pos.customTitle = props.customTitle
+  if (props?.customColor !== undefined) pos.customColor = props.customColor
+  if (props?.folded !== undefined) pos.folded = props.folded
+  Tabs.newTabsPosition[index] = pos
 }
 
 /**
