@@ -1,7 +1,7 @@
 {
   "ExtName": {
-    "en": "Sidebery",
-    "ru": "Sidebery"
+    "en": "oh-my-sidebery",
+    "ru": "oh-my-sidebery"
   },
   "ExtDesc": {
     "en": "Tabs tree, bookmarks and history in a highly configurable sidebar.",
@@ -15,15 +15,15 @@
     "ja": "高度にカスタマイズ可能なサイドバー内のタブツリー、ブックマーク、履歴。"
   },
   "ActionTitle": {
-    "en": "Toggle Sidebery sidebar\nMiddle click: Open settings",
-    "de": "Sidebery Seitenleiste umschalten\nMittelklick: Einstellungen öffnen",
-    "fr": "Ouvrir/fermer le panneau Sidebery\nClic-milieu: Ouvrir les paramètres",
-    "hu": "A Sidebery oldalsáv ki-/bekapcsolása\nKözépső gomb: Beállítások",
-    "pl": "Włącz panel boczny Sidebery\nŚrodkowy przycisk myszy: Otwórz ustawienia",
-    "ru": "Открыть Sidebery\nСредний щелчок: открыть настройки",
-    "zh_CN": "切换 Sidebery 侧边栏\n中键点击：打开设置",
-    "zh_TW": "切換 Sidebery 側邊欄\n中鍵點選：開啟設定",
-    "ja": "Sidebery サイドバーの切り替え\n中クリック: 設定を開く"
+    "en": "Toggle oh-my-sidebery sidebar\nMiddle click: Open settings",
+    "de": "oh-my-sidebery Seitenleiste umschalten\nMittelklick: Einstellungen öffnen",
+    "fr": "Ouvrir/fermer le panneau oh-my-sidebery\nClic-milieu: Ouvrir les paramètres",
+    "hu": "A oh-my-sidebery oldalsáv ki-/bekapcsolása\nKözépső gomb: Beállítások",
+    "pl": "Włącz panel boczny oh-my-sidebery\nŚrodkowy przycisk myszy: Otwórz ustawienia",
+    "ru": "Открыть oh-my-sidebery\nСредний щелчок: открыть настройки",
+    "zh_CN": "切换 oh-my-sidebery 侧边栏\n中键点击：打开设置",
+    "zh_TW": "切換 oh-my-sidebery 側邊欄\n中鍵點選：開啟設定",
+    "ja": "oh-my-sidebery サイドバーの切り替え\n中クリック: 設定を開く"
   },
 
   "KbOpenSidebarPanel": {

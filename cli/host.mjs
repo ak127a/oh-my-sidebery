@@ -12,7 +12,7 @@ import {
   getStateFilePath,
 } from './protocol.mjs'
 
-const MAX_BODY_BYTES = 2 * 1024 * 1024
+const MAX_BODY_BYTES = 16 * 1024 * 1024
 
 function sendJson(res, statusCode, body) {
   const json = JSON.stringify(body)
@@ -166,6 +166,12 @@ function resolveRoute(method, pathname, query, body) {
   if (method === 'GET' && pathname === '/api/groups') {
     return { method: 'listGroups', params: query }
   }
+  if (method === 'POST' && pathname === '/api/import/config') {
+    return { method: 'importLegacyConfig', params: { ...query, ...body } }
+  }
+  if (method === 'POST' && pathname === '/api/import/snapshot') {
+    return { method: 'importLegacySnapshot', params: { ...query, ...body } }
+  }
   if (method === 'POST' && pathname === '/api/rpc') {
     if (typeof body.method !== 'string' || !body.method) {
       const err = new Error('RPC body requires a "method" string')
@@ -227,15 +233,15 @@ export async function startBridge(options = {}) {
     }
   )
 
-  function callExtension(method, params) {
+  function callExtension(method, params, timeoutMs = requestTimeoutMs) {
     if (closed) return Promise.reject(new Error('Bridge is closed'))
 
     const id = randomUUID()
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         pending.delete(id)
-        reject(new Error(`Extension request timed out after ${requestTimeoutMs}ms: ${method}`))
-      }, requestTimeoutMs)
+        reject(new Error(`Extension request timed out after ${timeoutMs}ms: ${method}`))
+      }, timeoutMs)
 
       pending.set(id, { resolve, reject, timer })
       try {
@@ -262,7 +268,11 @@ export async function startBridge(options = {}) {
         const route = resolveRoute(req.method || 'GET', url.pathname, query, body)
         if (!route) return sendJson(res, 404, { ok: false, error: `Not found: ${url.pathname}` })
 
-        const data = await callExtension(route.method, route.params)
+        const timeoutOverride =
+          route.method === 'importLegacyConfig' || route.method === 'importLegacySnapshot'
+            ? Math.max(requestTimeoutMs, 120_000)
+            : requestTimeoutMs
+        const data = await callExtension(route.method, route.params, timeoutOverride)
         sendJson(res, 200, { ok: true, data })
       } catch (err) {
         const statusCode = err && typeof err.statusCode === 'number' ? err.statusCode : 400

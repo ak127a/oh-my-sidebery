@@ -9,7 +9,13 @@ import { ALLOWED_EXTENSIONS, HOST_NAME } from './protocol.mjs'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PACKAGE_ROOT = path.resolve(__dirname, '..')
 
-const CLI_FILES = ['protocol.mjs', 'host.mjs', 'sidebery.mjs', 'install-host.mjs']
+const CLI_FILES = [
+  'protocol.mjs',
+  'host.mjs',
+  'sidebery.mjs',
+  'install-host.mjs',
+  'legacy-import.mjs',
+]
 const WIN_REGISTRY_KEY = `HKCU\\Software\\Mozilla\\NativeMessagingHosts\\${HOST_NAME}`
 
 function getInstallDir({ homeDir, platform, localAppDataDir }) {

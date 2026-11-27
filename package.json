@@ -32,13 +32,13 @@
     "release.nightly": "node build/release-nightly.js",
     "test": "vitest run",
     "test.watch": "vitest watch",
-    "test.cli": "node --test cli/agent-api.test.mjs",
+    "test.cli": "node --test cli/*.test.mjs",
     "setup:cli": "node cli/install-host.mjs",
     "uninstall:cli": "node cli/install-host.mjs --uninstall",
     "api:install": "node cli/install-host.mjs",
     "api:uninstall": "node cli/install-host.mjs --uninstall"
   },
-  "author": "mbnuqw",
+  "author": "akshatkhandelwal",
   "license": "MIT",
   "devDependencies": {
     "@vitejs/plugin-vue": "6.0.10",

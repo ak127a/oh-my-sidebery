@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 import fs from 'node:fs'
 import http from 'node:http'
+import readline from 'node:readline/promises'
 import { DEFAULT_PORT, getSocketPath, getStateFilePath } from './protocol.mjs'
 import { installHost, uninstallHost } from './install-host.mjs'
+import {
+  discoverLegacySideberySources,
+  formatSnapshotChoiceLine,
+  loadLegacyDataFromFile,
+} from './legacy-import.mjs'
 
 const HELP_TEXT = `Sidebery AI Agent CLI
 
@@ -34,6 +40,8 @@ Tabs & Groups:
   tab close <tabIds...> [--window <id>]
 
 Other:
+  import [--profile <dir>] [--file <json>] [--list] [--snapshot <n|id|latest|live>] [--no-open] [--only-snapshot] [--dry-run]
+                                        Import panels, settings & chosen snapshot from earlier Sidebery
   rpc <method> [jsonParams]             Call any Sidebery Agent API RPC method directly
   install | install-host                Install sidebery-cli, native host, and AI skill
   uninstall | uninstall-host            Remove sidebery-cli, native host, and AI skill
@@ -50,6 +58,10 @@ const BOOLEAN_FLAGS = new Set([
   'pinned',
   'discarded',
   'tree',
+  'list',
+  'no-open',
+  'only-snapshot',
+  'dry-run',
   'pretty',
   'compact',
   'help',
@@ -455,6 +467,11 @@ async function main() {
     throw new Error(`Unknown tab subcommand: "${sub || ''}"`)
   }
 
+  if (cmd === 'import' || cmd === 'import-legacy') {
+    await handleImportCommand(flags)
+    return
+  }
+
   if (cmd === 'rpc') {
     if (!sub) throw new Error('Usage: sidebery-cli rpc <method> [jsonParams]')
     let params = {}
@@ -466,6 +483,212 @@ async function main() {
   }
 
   throw new Error(`Unknown command: "${cmd}". Run "sidebery-cli --help" for usage.`)
+}
+
+function resolveChosenSnapshot(snapshots, selector) {
+  if (!snapshots.length) return null
+  if (selector === 'latest') return snapshots[0]
+  if (selector === 'live') {
+    const live = snapshots.find(s => s.summary.source === 'live-cache')
+    if (!live) throw new Error('No live session cache snapshot found')
+    return live
+  }
+  const asNum = Number(selector)
+  if (Number.isInteger(asNum) && asNum >= 1 && asNum <= snapshots.length) {
+    return snapshots[asNum - 1]
+  }
+  const byId = snapshots.find(s => s.summary.id === selector)
+  if (byId) return byId
+  throw new Error(
+    `Snapshot "${selector}" not found. Run "sidebery-cli import --list" to see valid indices (1-${snapshots.length}) or IDs.`
+  )
+}
+
+async function promptChoice(question, defaultAnswer) {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+  try {
+    const answer = (await rl.question(question)).trim()
+    return answer === '' ? defaultAnswer : answer
+  } finally {
+    rl.close()
+  }
+}
+
+async function handleImportCommand(flags) {
+  let sources
+  if (flags.file) {
+    sources = [loadLegacyDataFromFile(String(flags.file))]
+  } else {
+    sources = await discoverLegacySideberySources({
+      profile: flags.profile ? String(flags.profile) : undefined,
+      sourceExtensionId: flags['source-id'] ? String(flags['source-id']) : undefined,
+    })
+  }
+
+  if (!sources.length) {
+    throw new Error(
+      'No earlier Sidebery data found in local Firefox profiles. Make sure Firefox is installed on this machine or pass --file <sidebery-data.json> or --profile <dir>.'
+    )
+  }
+
+  const structuredJson = Boolean(flags.pretty || flags.compact || !process.stdout.isTTY)
+
+  if (flags.list) {
+    if (structuredJson) {
+      printOutput(
+        {
+          sources: sources.map(src => ({
+            sourceType: src.sourceType,
+            profileName: src.profileName,
+            profilePath: src.profilePath,
+            filePath: src.filePath,
+            snapshots: src.snapshots.map((s, idx) => ({ index: idx + 1, ...s.summary })),
+          })),
+        },
+        flags
+      )
+      return
+    }
+
+    for (const src of sources) {
+      const originLabel =
+        src.sourceType === 'firefox-profile'
+          ? `Firefox profile: ${src.profileName} (${src.profilePath})`
+          : `Backup file: ${src.filePath}`
+      process.stdout.write(`${originLabel}\n`)
+      if (src.snapshots.length === 0) {
+        process.stdout.write('  (no snapshots or cached session found)\n\n')
+      } else {
+        for (let i = 0; i < src.snapshots.length; i++) {
+          process.stdout.write(formatSnapshotChoiceLine(src.snapshots[i].summary, i + 1) + '\n')
+        }
+        process.stdout.write('\n')
+      }
+    }
+    return
+  }
+
+  let selectedSource = sources[0]
+  if (sources.length > 1 && !flags.profile && !flags.file) {
+    if (process.stdin.isTTY && process.stdout.isTTY) {
+      process.stdout.write('Found earlier Sidebery data in multiple Firefox profiles:\n')
+      for (let i = 0; i < sources.length; i++) {
+        const s = sources[i]
+        const latest = s.snapshots[0]
+          ? formatSnapshotChoiceLine(s.snapshots[0].summary, i + 1).replace(/^\s+\d+\)\s+/, '')
+          : 'no snapshots'
+        process.stdout.write(`  ${i + 1}) ${s.profileName} (${s.profilePath}) — ${latest}\n`)
+      }
+      const pAns = await promptChoice(`Choose a profile [1-${sources.length}] (default 1, q to cancel): `, '1')
+      if (pAns.toLowerCase() === 'q') {
+        process.stdout.write('Cancelled.\n')
+        return
+      }
+      const pIdx = parseIntArg(pAns, 'profile index')
+      if (pIdx < 1 || pIdx > sources.length) {
+        throw new Error(`Invalid profile index: ${pIdx}`)
+      }
+      selectedSource = sources[pIdx - 1]
+    }
+  }
+
+  const snapshots = selectedSource.snapshots
+  let chosenEntry = null
+
+  if (flags.snapshot !== undefined) {
+    chosenEntry = resolveChosenSnapshot(snapshots, String(flags.snapshot))
+  } else if (snapshots.length > 0) {
+    if (!process.stdin.isTTY) {
+      throw new Error(
+        'Non-interactive mode requires --snapshot <1|latest|live|id> (run with --list first to see available snapshots).'
+      )
+    }
+
+    const originLabel =
+      selectedSource.sourceType === 'firefox-profile'
+        ? `${selectedSource.profileName} (${selectedSource.profilePath})`
+        : selectedSource.filePath
+    process.stdout.write(`Earlier Sidebery snapshots from ${originLabel} (most recent first):\n`)
+    for (let i = 0; i < snapshots.length; i++) {
+      process.stdout.write(formatSnapshotChoiceLine(snapshots[i].summary, i + 1) + '\n')
+    }
+    const answer = await promptChoice(
+      `Choose a snapshot to import [1-${snapshots.length}] (default 1, q to cancel): `,
+      '1'
+    )
+    if (answer.toLowerCase() === 'q') {
+      process.stdout.write('Cancelled.\n')
+      return
+    }
+    chosenEntry = resolveChosenSnapshot(snapshots, answer)
+  } else if (flags['only-snapshot']) {
+    throw new Error('No snapshots or cached session found to import')
+  }
+
+  const data = selectedSource.data || {}
+  const importConfigPayload = {}
+  if (!flags['only-snapshot']) {
+    if (data.containers) importConfigPayload.containers = data.containers
+    if (data.sidebar) importConfigPayload.sidebar = data.sidebar
+    if (data.settings) importConfigPayload.settings = data.settings
+    if (data.contextMenu) importConfigPayload.contextMenu = data.contextMenu
+    if (data.sidebarCSS) importConfigPayload.sidebarCSS = data.sidebarCSS
+    if (data.groupCSS) importConfigPayload.groupCSS = data.groupCSS
+  }
+
+  const hasConfigToImport = Object.keys(importConfigPayload).length > 0
+  if (!hasConfigToImport && !chosenEntry) {
+    throw new Error('Selected source contains neither config nor snapshots to import')
+  }
+
+  if (flags['dry-run']) {
+    printOutput(
+      {
+        dryRun: true,
+        source: selectedSource.profilePath || selectedSource.filePath,
+        configKeys: Object.keys(importConfigPayload),
+        snapshot: chosenEntry ? chosenEntry.summary : null,
+        openWindows: !flags['no-open'],
+      },
+      flags
+    )
+    return
+  }
+
+  let configResult = null
+  if (hasConfigToImport) {
+    configResult = await requestApi('POST', '/api/import/config', importConfigPayload)
+  }
+
+  let snapshotResult = null
+  if (chosenEntry) {
+    snapshotResult = await requestApi('POST', '/api/import/snapshot', {
+      snapshot: chosenEntry.snapshot,
+      openWindows: !flags['no-open'],
+    })
+  }
+
+  const result = {
+    ok: true,
+    source: selectedSource.profilePath || selectedSource.filePath,
+    config: configResult,
+    snapshot: snapshotResult,
+  }
+
+  if (structuredJson) {
+    printOutput(result, flags)
+  } else {
+    const parts = []
+    if (configResult?.imported?.sidebar) parts.push('panels & sidebar config')
+    if (configResult?.imported?.settings) parts.push('settings')
+    if (configResult?.imported?.containers) parts.push('containers')
+    if (snapshotResult) {
+      parts.push(
+        `snapshot ${snapshotResult.snapshotId} (${snapshotResult.windowsCount} windows, ${snapshotResult.panelsCount} panels, ${snapshotResult.tabsCount} tabs${snapshotResult.opened ? ', opened' : ''})`
+      )
+    }
+    process.stdout.write(`Imported ${parts.join(', ')}.\n`)
+  }
 }
 
 main().catch(err => {

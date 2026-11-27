@@ -10,6 +10,9 @@ import * as SidebarConfig from 'src/services/sidebar-config'
 import * as Tabs from 'src/services/tabs.bg'
 import * as Store from 'src/services/storage.bg'
 import * as Containers from 'src/services/containers'
+import * as ContainersBg from 'src/services/containers.bg'
+import * as SettingsBg from 'src/services/settings.bg'
+import * as SnapshotsBg from 'src/services/snapshots.bg'
 import * as Info from 'src/services/info.bg'
 
 export const NATIVE_HOST_NAME = 'sidebery_api'
@@ -611,7 +614,171 @@ async function dispatchMethod(method: string, params: Record<string, any>): Prom
       return { tabIds: params.tabIds }
     }
 
+    case 'importLegacyConfig': {
+      return await importLegacyConfig(params)
+    }
+
+    case 'importLegacySnapshot': {
+      return await importLegacySnapshot(params)
+    }
+
     default:
       throw new Error(`Unknown method: "${method}"`)
+  }
+}
+
+function mergeImportedSidebar(
+  rawSidebar: T.SidebarConfig,
+  containersIds: Record<string, string>
+): T.SidebarConfig {
+  const sidebar = Utils.clone(rawSidebar)
+  const nav = Array.isArray(sidebar.nav) ? [...sidebar.nav] : []
+  const panels: Record<ID, T.PanelConfig> = sidebar.panels ? { ...sidebar.panels } : {}
+
+  for (const id of nav) {
+    const panel = panels[id]
+    if (!panel || !Utils.isTabsPanel(panel)) continue
+    if (panel.newTabCtx && panel.newTabCtx !== 'none') {
+      panel.newTabCtx = containersIds[panel.newTabCtx] ?? 'none'
+    }
+    if (!Array.isArray(panel.moveRules)) panel.moveRules = []
+    else {
+      panel.moveRules = panel.moveRules.map(rule => {
+        if (rule.containerId) {
+          const newId = containersIds[rule.containerId]
+          if (newId) rule.containerId = newId
+          else {
+            rule.containerId = undefined
+            rule.active = false
+          }
+        }
+        return rule
+      })
+    }
+  }
+
+  const importedSet = new Set(nav)
+  const extraPanels: ID[] = []
+  for (const id of Sidebar.nav) {
+    if (importedSet.has(id) || id === 'tabs-panel') continue
+    const existingPanel = Sidebar.panelConfById[id]
+    if (!existingPanel) continue
+    if (existingPanel.type === E.PanelType.tabs) {
+      const hasTabs = Object.values(Tabs.byId).some(t => t?.panelId === id)
+      if (!hasTabs) continue
+    }
+    panels[id] = Utils.clone(existingPanel)
+    extraPanels.push(id)
+  }
+
+  if (extraPanels.length > 0) {
+    const addTpIdx = nav.indexOf('add_tp')
+    if (addTpIdx !== -1) nav.splice(addTpIdx, 0, ...extraPanels)
+    else nav.push(...extraPanels)
+  }
+
+  return { nav, panels }
+}
+
+async function importLegacyConfig(params: Record<string, any>) {
+  let containersIds: Record<string, string> = {}
+  let importedContainers = false
+  let importedSidebar = false
+  let importedSettings = false
+  let importedContextMenu = false
+  let importedStyles = false
+
+  if (params.containers && typeof params.containers === 'object') {
+    containersIds = await ContainersBg.importContainers(params.containers)
+    importedContainers = true
+  }
+
+  if (params.sidebar && Array.isArray(params.sidebar.nav) && params.sidebar.panels) {
+    const mergedSidebar = mergeImportedSidebar(params.sidebar as T.SidebarConfig, containersIds)
+    await Store.set({ sidebar: mergedSidebar })
+    importedSidebar = true
+  }
+
+  if (params.settings && typeof params.settings === 'object') {
+    await SettingsBg.importSettings(params.settings as T.SettingsState)
+    importedSettings = true
+  }
+
+  const extraStore: Partial<T.Stored> = {}
+  if (params.contextMenu && typeof params.contextMenu === 'object') {
+    extraStore.contextMenu = params.contextMenu
+    importedContextMenu = true
+  }
+  if (typeof params.sidebarCSS === 'string' && params.sidebarCSS.trim()) {
+    extraStore.sidebarCSS = params.sidebarCSS
+    importedStyles = true
+  }
+  if (typeof params.groupCSS === 'string' && params.groupCSS.trim()) {
+    extraStore.groupCSS = params.groupCSS
+    importedStyles = true
+  }
+  if (Object.keys(extraStore).length > 0) {
+    await Store.set(extraStore)
+  }
+
+  return {
+    imported: {
+      containers: importedContainers,
+      sidebar: importedSidebar,
+      settings: importedSettings,
+      contextMenu: importedContextMenu,
+      styles: importedStyles,
+    },
+  }
+}
+
+async function importLegacySnapshot(params: Record<string, any>) {
+  const raw = params.snapshot
+  if (!raw || typeof raw !== 'object' || !Array.isArray(raw.tabs) || !raw.sidebar) {
+    throw new Error('Valid snapshot object with tabs and sidebar is required')
+  }
+
+  const snapshot = Utils.clone(raw) as T.NormalizedSnapshot
+  if (!snapshot.id) snapshot.id = `import-${Date.now()}`
+  if (!snapshot.time) snapshot.time = Date.now()
+  if (!snapshot.containers) snapshot.containers = {}
+
+  let tabsCount = 0
+  const panelIds = new Set<ID>()
+  for (const win of snapshot.tabs) {
+    if (!Array.isArray(win)) continue
+    for (const panel of win) {
+      if (!Array.isArray(panel)) continue
+      for (const tab of panel) {
+        if (!tab || typeof tab.url !== 'string') continue
+        tabsCount++
+        if (tab.panelId !== undefined && tab.panelId !== D.NOID) panelIds.add(tab.panelId)
+        if (Utils.isGroupUrl(tab.url)) tab.url = Utils.updateGroupUrlBase(tab.url)
+        else if (Utils.isPlaceholderUrl(tab.url)) tab.url = Utils.updatePlaceholderUrlBase(tab.url)
+      }
+    }
+  }
+
+  const storedSnaps = await browser.storage.local.get<T.Stored>('snapshots').catch(() => undefined)
+  const alreadyStored = storedSnaps?.snapshots?.some(s => s.id === snapshot.id)
+  if (!alreadyStored) {
+    await SnapshotsBg.addSnapshot(Utils.clone(snapshot))
+  }
+
+  const openWindows = params.openWindows !== false
+  if (openWindows) {
+    await SnapshotsBg.openWindows(Utils.clone(snapshot))
+  }
+
+  const windowsCount = snapshot.tabs.filter(
+    w => Array.isArray(w) && w.some(p => Array.isArray(p) && p.length > 0)
+  ).length
+
+  return {
+    snapshotId: snapshot.id,
+    windowsCount,
+    panelsCount: panelIds.size,
+    tabsCount,
+    opened: openWindows,
   }
 }

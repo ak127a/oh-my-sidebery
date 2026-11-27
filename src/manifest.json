@@ -14,7 +14,7 @@
       }
     }
   },
-  "author": "mbnuqw",
+  "author": "akshatkhandelwal",
   "name": "__MSG_ExtName__",
   "version": "5.6.1",
   "default_locale": "en",
@@ -58,13 +58,13 @@
   ],
   "sidebar_action": {
     "default_icon": "./assets/logo-native.svg",
-    "default_title": "Sidebery",
+    "default_title": "oh-my-sidebery",
     "default_panel": "./sidebar/sidebar.html"
   },
   "page_action": {
     "browser_style": false,
     "default_icon": "./assets/proxy-native.svg",
-    "default_title": "Sidebery proxy off",
+    "default_title": "oh-my-sidebery proxy off",
     "default_popup": "./popup.proxy/proxy.html"
   },
   "commands": {
